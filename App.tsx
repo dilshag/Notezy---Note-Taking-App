@@ -1,9 +1,8 @@
-
-// app/_layout.tsx
+// App.tsx
 import { Stack } from "expo-router";
-import { AuthProvider } from "../context/AuthContext"; // adjust path if needed
+import { AuthProvider } from "./context/AuthContext";
 
-export default function RootLayout() {
+export default function App() {
   return (
     <AuthProvider>
       <Stack screenOptions={{ headerShown: false }} />
