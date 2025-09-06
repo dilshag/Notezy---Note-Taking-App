@@ -13,10 +13,12 @@
 // Think of async/await like saying:
 //“Wait here until Firebase is done, then continue.”
 
-// services/authService.ts
+
 
 // Make sure your firebase.ts exports 'auth' like: export const auth = getAuth(app);
 // If not, import the correct export (e.g., default or named)
+
+// services/authService.ts
 import { auth } from "@/firebase"; // use named import for 'auth'
 
 import {
