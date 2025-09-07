@@ -25,20 +25,21 @@ export const getNotes = async (userId: string) => {
 };
 
 //  Add new note
-export const addNote = async (userId: string, title: string, content: string) => {
+export const addNote = async (userId: string, title: string, content: string, category: string) => {
   const docRef = await addDoc(notesCollection, {
     userId,
     title,
     content,
+    category,  
     createdAt: Timestamp.now(),
   });
   return docRef.id;
 };
 
 //  Update note
-export const updateNote = async (noteId: string, title: string, content: string) => {
+export const updateNote = async (noteId: string, title: string, content: string,category: string) => {
   const noteRef = doc(db, "notes", noteId);
-  await updateDoc(noteRef, { title, content });
+  await updateDoc(noteRef, { title, content , category});
 };
 
 //  Delete note

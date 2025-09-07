@@ -1,195 +1,3 @@
-// // app/(dashboard)/index.tsx
-// import React, { useEffect, useState } from "react";
-// import {
-//   View,
-//   Text,
-//   FlatList,
-//   TextInput,
-//   TouchableOpacity,
-//   StyleSheet,
-//   KeyboardAvoidingView,
-//   Platform,
-// } from "react-native";
-// import { useAuth } from "../../context/AuthContext";
-// import { getNotes, addNote, updateNote, deleteNote } from "../../services/noteService";
-
-// export default function Dashboard() {
-//   const { user, logoutUser } = useAuth();
-//   const [notes, setNotes] = useState<any[]>([]);
-//   const [title, setTitle] = useState("");
-//   const [content, setContent] = useState("");
-//   const [editingId, setEditingId] = useState<string | null>(null);
-//   const [search, setSearch] = useState("");
-
-//   // Load notes
-//   const loadNotes = async () => {
-//     if (user?.uid) {
-//       let data = await getNotes(user.uid);
-//       // Sort latest notes first
-//       data.sort(
-//         (a, b) =>
-//           new Date(b.createdAt?.seconds * 1000).getTime() -
-//           new Date(a.createdAt?.seconds * 1000).getTime()
-//       );
-//       setNotes(data);
-//     }
-//   };
-
-//   useEffect(() => {
-//     loadNotes();
-//   }, [user]);
-
-//   // Add / Update note
-//   const handleSave = async () => {
-//     if (!title || !content || !user?.uid) return;
-
-//     if (editingId) {
-//       await updateNote(editingId, title, content);
-//       setEditingId(null);
-//     } else {
-//       await addNote(user.uid, title, content);
-//     }
-
-//     setTitle("");
-//     setContent("");
-//     loadNotes();
-//   };
-
-//   // Edit note
-//   const handleEdit = (note: any) => {
-//     setTitle(note.title);
-//     setContent(note.content);
-//     setEditingId(note.id);
-//   };
-
-//   // Delete note
-//   const handleDelete = async (id: string) => {
-//     await deleteNote(id);
-//     loadNotes();
-//   };
-
-//   // Auto filter notes by search
-//   const filteredNotes = notes.filter(
-//     (note) =>
-//       note.title.toLowerCase().includes(search.toLowerCase()) ||
-//       note.content.toLowerCase().includes(search.toLowerCase())
-//   );
-
-//   return (
-//     <KeyboardAvoidingView
-//       style={styles.container}
-//       behavior={Platform.OS === "ios" ? "padding" : "height"}
-//     >
-//       <Text style={styles.header}>Welcome {user?.email}</Text>
-
-//       {/* 🔍 Search bar */}
-//       <TextInput
-//         placeholder="Search notes..."
-//         value={search}
-//         onChangeText={setSearch}
-//         style={styles.searchInput}
-//       />
-
-//       {/* 📝 Input fields */}
-//       <TextInput
-//         placeholder="Title"
-//         value={title}
-//         onChangeText={setTitle}
-//         style={styles.input}
-//       />
-//       <TextInput
-//         placeholder="Content"
-//         value={content}
-//         onChangeText={setContent}
-//         style={[styles.input, { height: 80 }]}
-//         multiline
-//       />
-//       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-//         <Text style={styles.saveButtonText}>
-//           {editingId ? "Update Note" : "Add Note"}
-//         </Text>
-//       </TouchableOpacity>
-
-//       {/* 📌 Notes List */}
-//       <FlatList
-//         data={filteredNotes}
-//         keyExtractor={(item) => item.id}
-//         renderItem={({ item }) => (
-//           <View style={styles.noteCard}>
-//             <Text style={styles.noteTitle}>{item.title}</Text>
-//             <Text style={styles.noteContent}>{item.content}</Text>
-//             <View style={styles.noteActions}>
-//               <TouchableOpacity onPress={() => handleEdit(item)}>
-//                 <Text style={styles.edit}>✏️ Edit</Text>
-//               </TouchableOpacity>
-//               <TouchableOpacity onPress={() => handleDelete(item.id)}>
-//                 <Text style={styles.delete}>🗑 Delete</Text>
-//               </TouchableOpacity>
-//             </View>
-//           </View>
-//         )}
-//       />
-
-//       <TouchableOpacity style={styles.logoutButton} onPress={logoutUser}>
-//         <Text style={styles.logoutText}>Logout</Text>
-//       </TouchableOpacity>
-//     </KeyboardAvoidingView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: { flex: 1, padding: 20, backgroundColor: "#f3f4f6" },
-//   header: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
-//   searchInput: {
-//     borderWidth: 1,
-//     borderColor: "#ccc",
-//     borderRadius: 10,
-//     padding: 10,
-//     marginBottom: 10,
-//     backgroundColor: "#fff",
-//   },
-//   input: {
-//     borderWidth: 1,
-//     borderColor: "#ccc",
-//     borderRadius: 10,
-//     padding: 10,
-//     marginVertical: 5,
-//     backgroundColor: "#fff",
-//   },
-//   saveButton: {
-//     backgroundColor: "#4A90E2",
-//     padding: 15,
-//     borderRadius: 10,
-//     alignItems: "center",
-//     marginBottom: 10,
-//   },
-//   saveButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
-//   noteCard: {
-//     backgroundColor: "#fff",
-//     padding: 15,
-//     marginVertical: 6,
-//     borderRadius: 10,
-//     shadowColor: "#000",
-//     shadowOpacity: 0.1,
-//     shadowRadius: 5,
-//     shadowOffset: { width: 0, height: 2 },
-//   },
-//   noteTitle: { fontWeight: "bold", fontSize: 16 },
-//   noteContent: { marginTop: 4 },
-//   noteActions: { flexDirection: "row", marginTop: 10 },
-//   edit: { color: "blue", marginRight: 15 },
-//   delete: { color: "red" },
-//   logoutButton: {
-//     backgroundColor: "#f394c0",
-//     padding: 12,
-//     borderRadius: 10,
-//     alignItems: "center",
-//     marginTop: 10,
-//   },
-//   logoutText: { color: "#fff", fontWeight: "bold" },
-// });
-
-
 // app/(dashboard)/index.tsx
 import React, { useEffect, useState } from "react";
 import {
@@ -207,7 +15,7 @@ import {
 } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { getNotes, addNote, updateNote, deleteNote } from "../../services/noteService";
-import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 
 export default function Dashboard() {
   const { user, logoutUser } = useAuth();
@@ -215,26 +23,37 @@ export default function Dashboard() {
     id: string;
     title: string;
     content: string;
+    category: string;
     createdAt?: { seconds: number; nanoseconds?: number };
   };
+  
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [category, setCategory] = useState("Personal");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+
+  const categories = ["Personal", "Work", "Study", "Ideas", "Other"];
+  const categoryColors: { [key: string]: string } = {
+    Personal: "#FFB6C1",
+    Work: "#87CEFA",
+    Study: "#FFD700",
+    Ideas: "#90EE90",
+    Other: "#D3D3D3",
+  };
 
   // Load notes
   const loadNotes = async () => {
     if (user?.uid) {
       let data = await getNotes(user.uid);
-      // Ensure each note has all required fields
       const notesData: Note[] = data.map((note: any) => ({
         id: note.id,
         title: note.title ?? "",
         content: note.content ?? "",
+        category: note.category ?? "Other",
         createdAt: note.createdAt,
       }));
-      // Sort latest notes first
       notesData.sort(
         (a, b) =>
           new Date((b.createdAt?.seconds ?? 0) * 1000).getTime() -
@@ -253,21 +72,23 @@ export default function Dashboard() {
     if (!title || !content || !user?.uid) return;
 
     if (editingId) {
-      await updateNote(editingId, title, content);
+      await updateNote(editingId, title, content, category);
       setEditingId(null);
     } else {
-      await addNote(user.uid, title, content);
+      await addNote(user.uid, title, content, category);
     }
 
     setTitle("");
     setContent("");
+    setCategory("Personal");
     loadNotes();
   };
 
   // Edit note
-  const handleEdit = (note: any) => {
+  const handleEdit = (note: Note) => {
     setTitle(note.title);
     setContent(note.content);
+    setCategory(note.category);
     setEditingId(note.id);
   };
 
@@ -277,11 +98,12 @@ export default function Dashboard() {
     loadNotes();
   };
 
-  // Auto filter notes by search
+  // Filter notes
   const filteredNotes = notes.filter(
     (note) =>
       note.title.toLowerCase().includes(search.toLowerCase()) ||
-      note.content.toLowerCase().includes(search.toLowerCase())
+      note.content.toLowerCase().includes(search.toLowerCase()) ||
+      note.category.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -306,11 +128,11 @@ export default function Dashboard() {
             </TouchableOpacity>
           </View>
 
-          {/* 🔍 Search bar */}
+          {/* Search Bar */}
           <View style={styles.searchContainer}>
             <Ionicons name="search" size={20} color="#FF6B8B" style={styles.searchIcon} />
             <TextInput
-              placeholder="Search your beautiful notes..."
+              placeholder="Search notes..."
               placeholderTextColor="#FFA5BA"
               value={search}
               onChangeText={setSearch}
@@ -318,11 +140,35 @@ export default function Dashboard() {
             />
           </View>
 
-          {/* 📝 Input fields */}
+          {/* Input Fields */}
           <ScrollView style={styles.inputContainer}>
             <Text style={styles.sectionTitle}>
               {editingId ? "✨ Edit Your Note" : "🖋 Create New Magic"}
             </Text>
+
+            {/* Category Selection */}
+            <View style={styles.categoryContainer}>
+              {categories.map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.categoryButton,
+                    category === cat && styles.categoryButtonSelected,
+                  ]}
+                  onPress={() => setCategory(cat)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      category === cat && styles.categoryTextSelected,
+                    ]}
+                  >
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
             <View style={styles.inputWrapper}>
               <Ionicons name="pencil" size={20} color="#FF6B8B" style={styles.inputIcon} />
               <TextInput
@@ -357,23 +203,20 @@ export default function Dashboard() {
             </TouchableOpacity>
           </ScrollView>
 
-          {/* 📌 Notes List */}
+          {/* Notes List */}
           <Text style={styles.sectionTitle}>Your Beautiful Notes ({filteredNotes.length}) 💖</Text>
           <FlatList
             data={filteredNotes}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <View style={[
-                styles.noteCard,
-                { backgroundColor: `hsl(${Math.floor(Math.random() * 60) + 300}, 70%, 90%)` }
-              ]}>
+              <View style={[styles.noteCard, { backgroundColor: categoryColors[item.category] || "#FFF" }]}>
                 <View style={styles.noteHeader}>
                   <View style={styles.noteTitleContainer}>
                     <Ionicons name="bookmark" size={16} color="#FF6B8B" />
                     <Text style={styles.noteTitle} numberOfLines={1}>{item.title}</Text>
                   </View>
                   <Text style={styles.noteTime}>
-                    {new Date(((item.createdAt?.seconds ?? 0) * 1000)).toLocaleDateString()}
+                    {new Date((item.createdAt?.seconds ?? 0) * 1000).toLocaleDateString()}
                   </Text>
                 </View>
                 <Text style={styles.noteContent} numberOfLines={3}>{item.content}</Text>
@@ -405,7 +248,7 @@ export default function Dashboard() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+   safeArea: {
     flex: 1,
     backgroundColor: "#FFECF1",
   },
@@ -618,4 +461,22 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
+  categoryContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 10,
+  },
+  categoryButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    marginRight: 8,
+    marginBottom: 6,
+  },
+  categoryButtonSelected: {
+    backgroundColor: '#FF6B8B',
+  },
+  categoryText: { color: '#FF6B8B', fontWeight: '600' },
+  categoryTextSelected: { color: '#fff' },
 });
