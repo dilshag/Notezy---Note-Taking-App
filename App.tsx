@@ -1,8 +1,8 @@
 // App.tsx
 import React from "react";
+import LoginScreen from "./app/(auth)/login"; // oyage login screen path eka ganna
+import Dashboard from "./app/(dashboard)/index";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import Dashboard from "./app/(dashboard)/index"; 
-import LoginScreen from "./app/(auth)/login";   // oyage login screen path eka ganna
 
 function RootNavigator() {
   const { user, loading } = useAuth();

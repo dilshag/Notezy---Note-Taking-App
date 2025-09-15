@@ -1,31 +1,17 @@
+import { AuthProvider } from "@/context/AuthContext";
+import { LoaderProvider } from "@/context/LoaderContext";
+import { Slot } from "expo-router";
+import React from "react";
+import './../global.css';
 
-// // app/_layout.tsx
-// import { Stack } from "expo-router";
-// import { AuthProvider } from "../context/AuthContext"; // adjust path if needed
-
-// export default function RootLayout() {
-//   return (
-//     <AuthProvider>
-//       <Stack screenOptions={{ headerShown: false }} />
-//     </AuthProvider>
-//   );
-// }
-
-
-// app/_layout.tsx
-import { Stack } from "expo-router";
-import { AuthProvider } from "../context/AuthContext";
-
-export default function RootLayout() {
+const RootLayout = () => {
   return (
-    <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </AuthProvider>
-  );
+    <LoaderProvider>
+      <AuthProvider>
+        <Slot />
+      </AuthProvider>
+    </LoaderProvider>
+  )
 }
 
-
-//  Key Point:
-// useAuth() call karanna puluwan only inside children of <AuthProvider>.
-//  app/_layout.tsx eke wrap karanna with AuthProvider.
-// Then (auth)/_layout.tsx + (dashboard)/_layout.tsx walin user check karanna.
+export default RootLayout

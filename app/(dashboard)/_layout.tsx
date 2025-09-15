@@ -1,23 +1,41 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Tabs } from "expo-router";
+import React from "react";
 
-// app/(dashboard)/_layout.tsx
-import { Stack, Redirect } from "expo-router";
-import { useAuth } from "../../context/AuthContext";
-import { View, ActivityIndicator } from "react-native";
+const tabs = [
+  { label: "Home", name: "index", icon: "home" },
+  { label: "Notes", name: "notes", icon: "note" },
+  { label: "Profile", name: "profile", icon: "person" },
+];
 
-export default function DashboardLayout() {
-  const { user, loading } = useAuth();
+const DashboardLayout = () => {
+  return (
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: "#FF6B8B",
+        tabBarInactiveTintColor: "#999",
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: "#fff",
+          height: 60,
+          paddingBottom: 5,
+        },
+      }}
+    >
+      {tabs.map(({ name, icon, label }) => (
+        <Tabs.Screen
+          key={name}
+          name={name}
+          options={{
+            title: label,
+            tabBarIcon: ({ color, size }) => (
+              <MaterialIcons name={icon as any} color={color} size={size} />
+            ),
+          }}
+        />
+      ))}
+    </Tabs>
+  );
+};
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
-  if (!user) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
-  return <Stack screenOptions={{ headerShown: false }} />;
-}
+export default DashboardLayout;

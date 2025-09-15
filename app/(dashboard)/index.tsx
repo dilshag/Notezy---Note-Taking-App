@@ -1,4 +1,3 @@
-// app/(dashboard)/index.tsx
 import { Feather, Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from "react";
 import {
@@ -16,16 +15,10 @@ import {
 } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { addNote, deleteNote, getNotes, updateNote } from "../../services/noteService";
+import { Note } from "../../types/note";
 
 export default function Dashboard() {
   const { user, logoutUser } = useAuth();
-  type Note = {
-    id: string;
-    title: string;
-    content: string;
-    category: string;
-    createdAt?: { seconds: number; nanoseconds?: number };
-  };
   
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState("");
@@ -47,7 +40,7 @@ export default function Dashboard() {
   const loadNotes = async () => {
     if (user?.uid) {
       let data = await getNotes(user.uid);
-      const notesData: Note[] = data.map((note: any) => ({
+      const notesData: Note[] = data.map((note) => ({
         id: note.id,
         title: note.title ?? "",
         content: note.content ?? "",
@@ -246,7 +239,6 @@ export default function Dashboard() {
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
    safeArea: {
     flex: 1,
