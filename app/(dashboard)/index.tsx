@@ -473,8 +473,6 @@
 //   categoryTextSelected: { color: '#fff' },
 // });
 
-
-// app/home/index.tsx
 import { Feather, Ionicons } from '@expo/vector-icons';
 import React, { useState } from "react";
 import {
@@ -489,11 +487,13 @@ import {
   View
 } from "react-native";
 import { useAuth } from "../../context/AuthContext";
+import { useNotes } from "../../context/NotesContext";
 import { addNote, updateNote } from "../../services/noteService";
 
-export default function Dashboard() {
+export default function Home() {
   const { user, logoutUser } = useAuth();
-  
+  const { reloadNotes } = useNotes();
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("Personal");
@@ -501,7 +501,6 @@ export default function Dashboard() {
 
   const categories = ["Personal", "Work", "Study", "Ideas", "Other"];
 
-  // Add / Update note
   const handleSave = async () => {
     if (!title || !content || !user?.uid) return;
 
@@ -515,6 +514,8 @@ export default function Dashboard() {
     setTitle("");
     setContent("");
     setCategory("Personal");
+
+    reloadNotes(); // refresh notes for dashboard immediately
   };
 
   return (
@@ -540,23 +541,14 @@ export default function Dashboard() {
             {editingId ? "✨ Edit Your Note" : "🖋 Create New Magic"}
           </Text>
 
-          {/* Category Selection */}
           <View style={styles.categoryContainer}>
             {categories.map((cat) => (
               <TouchableOpacity
                 key={cat}
-                style={[
-                  styles.categoryButton,
-                  category === cat && styles.categoryButtonSelected,
-                ]}
+                style={[styles.categoryButton, category === cat && styles.categoryButtonSelected]}
                 onPress={() => setCategory(cat)}
               >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    category === cat && styles.categoryTextSelected,
-                  ]}
-                >
+                <Text style={[styles.categoryText, category === cat && styles.categoryTextSelected]}>
                   {cat}
                 </Text>
               </TouchableOpacity>
