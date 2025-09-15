@@ -1,21 +1,21 @@
 // app/(dashboard)/index.tsx
+import { Feather, Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
   FlatList,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
+  ImageBackground,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   SafeAreaView,
-  ImageBackground
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { useAuth } from "../../context/AuthContext";
-import { getNotes, addNote, updateNote, deleteNote } from "../../services/noteService";
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { addNote, deleteNote, getNotes, updateNote } from "../../services/noteService";
 
 export default function Dashboard() {
   const { user, logoutUser } = useAuth();
