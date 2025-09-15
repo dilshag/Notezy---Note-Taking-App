@@ -473,6 +473,7 @@
 //   categoryTextSelected: { color: '#fff' },
 // });
 
+
 import { Feather, Ionicons } from '@expo/vector-icons';
 import React, { useState } from "react";
 import {
