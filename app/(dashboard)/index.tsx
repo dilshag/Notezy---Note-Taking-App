@@ -620,12 +620,13 @@
 // app/(dashboard)/notes.tsx
 // app/(dashboard)/index.tsx
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { Video } from 'expo-av';
+import { ResizeMode, Video } from 'expo-av';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../context/AuthContext";
+import { uploadToCloudinary } from "../../services/cloudinaryService";
 import { addNote } from "../../services/noteService";
 
 export default function Home() {
@@ -656,12 +657,83 @@ export default function Home() {
     if (result.type === "success") setFile(result.uri);
   };
 
-  const handleSave = async () => {
-    if (!title || !content || !user?.uid) return;
-    await addNote(user.uid, title, content, category, image, video, file);
-    setTitle(""); setContent(""); setCategory("Personal"); setImage(null); setVideo(null); setFile(null);
-    // Optionally reload notes in dashboard
-  };
+// const handleSave = async () => {
+//   if (!title || !content || !user?.uid) return;
+
+//   let imageUrl: string | null = null;
+//   let videoUrl: string | null = null;
+//   let fileUrl: string | null = null;
+
+//   try {
+//     if (image) imageUrl = await uploadToCloudinary(image, "image");
+//     if (video) videoUrl = await uploadToCloudinary(video, "video");
+//     if (file) fileUrl = await uploadToCloudinary(file, "file");
+
+//     await addNote(user.uid, title, content, category, imageUrl, videoUrl, fileUrl);
+
+//     setTitle(""); setContent(""); setCategory("Personal"); setImage(null); setVideo(null); setFile(null);
+//   } catch (err) {
+//     console.error("Upload failed:", err);
+//   }
+// };
+
+
+const handleSave = async () => {
+  if (!title || !content || !user?.uid) return;
+
+  let imageUrl: string | null = null;
+  let videoUrl: string | null = null;
+  let fileUrl: string | null = null;
+
+  try {
+    // Upload image if selected
+    if (image) {
+      const uploadedImageUrl = await uploadToCloudinary(image, "image");
+      console.log("Image URL to save:", uploadedImageUrl);
+      imageUrl = uploadedImageUrl;
+    }
+
+    // Upload video if selected
+    if (video) {
+      const uploadedVideoUrl = await uploadToCloudinary(video, "video");
+      console.log("Video URL to save:", uploadedVideoUrl);
+      videoUrl = uploadedVideoUrl;
+    }
+
+    // Upload file if selected
+    if (file) {
+      const uploadedFileUrl = await uploadToCloudinary(file, "file");
+      console.log("File URL to save:", uploadedFileUrl);
+      fileUrl = uploadedFileUrl;
+    }
+
+    // Save the note to Firestore
+    const noteId = await addNote(user.uid, title, content, category, imageUrl, videoUrl, fileUrl);
+    console.log("Note saved with ID:", noteId);
+
+    // Reset form
+    setTitle("");
+    setContent("");
+    setCategory("Personal");
+    setImage(null);
+    setVideo(null);
+    setFile(null);
+
+  } catch (err) {
+    console.error("Upload or save failed:", err);
+  }
+};
+
+
+
+
+
+  // const handleSave = async () => {
+  //   if (!title || !content || !user?.uid) return;
+  //   await addNote(user.uid, title, content, category, image, video, file);
+  //   setTitle(""); setContent(""); setCategory("Personal"); setImage(null); setVideo(null); setFile(null);
+  //   // Optionally reload notes in dashboard
+  // };
 
   return (
     <ScrollView style={styles.safeArea}>
@@ -722,7 +794,7 @@ export default function Home() {
 
       {/* Preview Attachments */}
       {image && <Image source={{ uri: image }} style={{ width: "100%", height: 200, borderRadius: 12, marginBottom: 8 }} />}
-      {video && <Video source={{ uri: video }} style={{ width: "100%", height: 200, marginBottom: 8 }} useNativeControls resizeMode="contain" />}
+      {video && <Video source={{ uri: video }} style={{ width: "100%", height: 200, marginBottom: 8 }} useNativeControls resizeMode={ResizeMode.CONTAIN} />}
       {file && <Text style={{ color: "#FF6B8B", marginBottom: 8 }}>File: {file.split("/").pop()}</Text>}
 
       {/* Save Button */}

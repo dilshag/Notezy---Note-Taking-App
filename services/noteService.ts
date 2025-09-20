@@ -24,22 +24,30 @@ export const getNotes = async (userId: string): Promise<Note[]> => {
   })) as Note[];
 };
 
-// Add new note
+// // Add new note
+
 export const addNote = async (
   userId: string,
   title: string,
   content: string,
-  category: string
+  category: string,
+  imageUrl: string | null = null,
+  videoUrl: string | null = null,
+  fileUrl: string | null = null
 ): Promise<string> => {
   const docRef = await addDoc(notesCollection, {
     userId,
     title,
     content,
     category,
+    imageUrl: imageUrl ?? null,
+    videoUrl: videoUrl ?? null,
+    fileUrl: fileUrl ?? null,
     createdAt: Timestamp.now(),
   });
   return docRef.id;
 };
+
 
 // Update note
 export const updateNote = async (
@@ -57,3 +65,21 @@ export const deleteNote = async (noteId: string): Promise<void> => {
   const noteRef = doc(db, "notes", noteId);
   await deleteDoc(noteRef);
 };
+
+
+
+// export const addNote = async (
+//   userId: string,
+//   title: string,
+//   content: string,
+//   category: string
+// ): Promise<string> => {
+//   const docRef = await addDoc(notesCollection, {
+//     userId,
+//     title,
+//     content,
+//     category,
+//     createdAt: Timestamp.now(),
+//   });
+//   return docRef.id;
+// };
