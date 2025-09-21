@@ -37,7 +37,10 @@ const UPLOAD_PRESET = "notezy_preset"; // Unsigned preset
 //   }
 // };
 
-export const uploadToCloudinary = async (fileUri: string, fileType: "image" | "video" | "file") => {
+export const uploadToCloudinary = async (
+  fileUri: string, 
+  fileType: "image" | "video" | "file"
+) => {
   try {
     const formData = new FormData();
 
@@ -58,8 +61,14 @@ export const uploadToCloudinary = async (fileUri: string, fileType: "image" | "v
 
     formData.append("upload_preset", UPLOAD_PRESET);
 
+     //  Use 'raw' for generic files
+    const resourceType =
+      fileType === "file" ? "raw" : fileType;
+
     const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${fileType}/upload`,
+      //`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`,
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${fileType === "file" ? "raw" : fileType}/upload`,
+
       formData,
       { headers: { "Content-Type": "multipart/form-data" } }
     );
