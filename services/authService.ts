@@ -19,15 +19,45 @@
 // If not, import the correct export (e.g., default or named)
 
 // services/authService.ts
-import { auth } from "@/firebase"; // use named import for 'auth'
+import { auth, db } from "@/firebase"; // use named import for 'auth'
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 import {
   createUserWithEmailAndPassword,
+  onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged,
   User
 } from "firebase/auth";
+
+
+// Initialize Firestore profile if it doesn't exist
+export const initUserProfile = async (user: User) => {
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+
+  
+ if (!userSnap.exists()) {
+    const defaultName = user.email?.split("@")[0] || "User";
+
+    await setDoc(userRef, {
+      email: user.email,
+      displayName: defaultName, // ✅ new field
+      profileImage: null,
+    });
+    console.log("Firestore profile created for:", user.email);
+  }
+  
+
+
+  // if (!userSnap.exists()) {
+  //   await setDoc(userRef, {
+  //     email: user.email,
+  //     profileImage: null, // default null
+  //   });
+  //   console.log("Firestore profile created for:", user.email);
+  // }
+};
 
 // Register user
 export const register = async (email: string, password: string) => {
@@ -44,7 +74,19 @@ export const logout = async () => {
   return await signOut(auth);
 };
 
-// Subscribe to auth state changes
+// // Subscribe to auth state changes
+// export const subscribeToAuthChanges = (callback: (user: User | null) => void) => {
+//   return onAuthStateChanged(auth, callback);
+// };
 export const subscribeToAuthChanges = (callback: (user: User | null) => void) => {
-  return onAuthStateChanged(auth, callback);
+  return onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      try {
+        await initUserProfile(user); // ✅ create profile if missing
+      } catch (err) {
+        console.error("Failed to initialize Firestore profile:", err);
+      }
+    }
+    callback(user);
+  });
 };
