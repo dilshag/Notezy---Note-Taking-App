@@ -7,7 +7,7 @@ import React, { useEffect, useState } from "react";
 import { Button, FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { deleteNote, getNotes, updateNote } from "../../services/noteService";
-import { cancelAllNotifications, scheduleNotification } from "../../services/notificationService";
+import { cancelNotification, scheduleNotification } from "../../services/notificationService";
 import { Note } from "../../types/note";
 
 export default function NotesPage() {
@@ -93,34 +93,46 @@ export default function NotesPage() {
   };
 
   const handleSaveEdit = async (id: string) => {
-    if (!editTitle || !editContent) return;
-    await updateNote(
-      id,
-      editTitle,
-      editContent,
-      notes.find((n) => n.id === id)?.category || "Other",  editReminder
-    );
+  if (!editTitle || !editContent) return;
 
+  const existingNote = notes.find((n) => n.id === id);
+  let newReminderId: string | null = existingNote?.reminderId || null;
 
-//  Handle Notifications
   if (editReminder) {
-    await scheduleNotification(`Reminder: ${editTitle}`, editContent, editReminder);
-  } else {
-    await cancelAllNotifications(); //  cancel old notifications if reminder removed
+    // Schedule or update reminder
+    newReminderId = await scheduleNotification(`Reminder: ${editTitle}`, editContent, editReminder);
+  } else if (existingNote?.reminderId) {
+    // Cancel old reminder if removed
+    await cancelNotification(existingNote.reminderId);
+    newReminderId = null;
   }
 
-    setEditingId(null);
-    setEditTitle("");
-    setEditContent("");
-    setEditReminder(null);
-    loadNotes();
-  };
+  await updateNote(
+    id,
+    editTitle,
+    editContent,
+    existingNote?.category || "Other",
+    editReminder,
+    newReminderId // 🆕 Save reminder ID
+  );
 
-  const handleDelete = async (id: string) => {
-  await cancelAllNotifications(); //  cancel notification for this note
+  setEditingId(null);
+  setEditTitle("");
+  setEditContent("");
+  setEditReminder(null);
+  loadNotes();
+};
+
+
+const handleDelete = async (id: string) => {
+  const noteToDelete = notes.find((n) => n.id === id);
+  if (noteToDelete?.reminderId) {
+    await cancelNotification(noteToDelete.reminderId); // cancel this note's reminder only
+  }
   await deleteNote(id);
   loadNotes();
 };
+
 
 
   const filteredNotes = notes.filter(

@@ -5,6 +5,7 @@ import {
   doc,
   getDocs,
   query,
+  serverTimestamp,
   Timestamp,
   updateDoc,
   where,
@@ -34,7 +35,8 @@ category: string,
 imageUrl: string | null = null, 
 videoUrl: string | null = null, 
 fileUrl: string | null = null, 
-reminderDate: Date | null
+reminderDate: Date | null,
+reminderId: string | null = null
 ): Promise<string> => {
 
   const docRef = await addDoc(notesCollection, {
@@ -46,6 +48,7 @@ reminderDate: Date | null
     videoUrl: videoUrl ?? null,
     fileUrl: fileUrl ?? null,
     reminderDate: reminderDate ? Timestamp.fromDate(reminderDate) : null,
+    reminderId: reminderId ?? null,
 
     createdAt: Timestamp.now(),
   });
@@ -59,15 +62,21 @@ export const updateNote = async (
   title: string, 
   content: string, 
   category: string, 
-  editReminder: Date | null
+  editReminder: Date | null,
+  reminderId?: string | null
 ): Promise<void> => {
   const noteRef = doc(db, "notes", noteId);
   await updateDoc(noteRef, { 
     title, 
     content, 
     category,
-    reminderDate: editReminder ? Timestamp.fromDate(editReminder) : null,});
-};
+    reminderDate: editReminder ? Timestamp.fromDate(editReminder) : null,
+    reminderId: reminderId || null, // 🆕 store in Firestore
+    updatedAt: serverTimestamp(),});
+   
+  
+
+  };
 
 // Delete note
 export const deleteNote = async (noteId: string): Promise<void> => {
