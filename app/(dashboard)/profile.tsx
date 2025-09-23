@@ -1,12 +1,11 @@
 import { useAuth } from "@/context/AuthContext";
-import { useThemeContext } from "@/context/ThemeContext"; // import hook
+import { useThemeContext } from "@/context/ThemeContext";
 import { auth, db } from "@/firebase";
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from "expo-image-picker";
 import { sendPasswordResetEmail, updatePassword } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
-
 import {
   ActivityIndicator,
   Alert,
@@ -32,6 +31,18 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [editingName, setEditingName] = useState(false);
+
+  // Color palette
+  const colors = {
+    primary: "#6366F1",
+    secondary: "#8B5CF6",
+    accent: "#10B981",
+    background: isDark ? "#0F172A" : "#F8FAFC",
+    card: isDark ? "#1E293B" : "#FFFFFF",
+    text: isDark ? "#F1F5F9" : "#334155",
+    textMuted: isDark ? "#94A3B8" : "#64748B",
+    border: isDark ? "#334155" : "#E2E8F0",
+  };
 
   // Load current profile image from Firestore
   useEffect(() => {
@@ -63,7 +74,7 @@ export default function ProfilePage() {
         try {
           if (auth.currentUser) {
             await updatePassword(auth.currentUser, newPassword);
-            Alert.alert("✅ Password Updated", "Your password has been changed.");
+            Alert.alert("✅ Password Updated", "Your password has been changed successfully.");
           }
         } catch (error: any) {
           Alert.alert("Error", error.message);
@@ -141,13 +152,10 @@ export default function ProfilePage() {
     setUploading(true);
 
     try {
-      // Upload to Cloudinary
       const uploadedUrl = await uploadToCloudinary(uri, "image");
       setImage(uploadedUrl);
-
-      // Save URL to Firestore
       await updateDoc(doc(db, "users", user.uid), { profileImage: uploadedUrl });
-      Alert.alert("✨ Success", "Your profile picture has been updated beautifully!");
+      Alert.alert("✨ Success", "Your profile picture has been updated!");
     } catch (err) {
       console.error("Upload error:", err);
       Alert.alert("Upload failed", "Could not upload profile image. Please try again.");
@@ -168,178 +176,216 @@ export default function ProfilePage() {
   };
 
   return (
-       <SafeAreaView
-      style={[
-      styles.safeArea,
-      { backgroundColor: isDark ? "#121212" : "#FFECF1" }
-         ]}
-        >
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={[styles.title, { color: colors.text }]}>
+              Profile Settings
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+              Manage your account and preferences
+            </Text>
+          </View>
+          <View style={[styles.themeIndicator, { backgroundColor: colors.card }]}>
+            <Ionicons 
+              name={isDark ? "moon" : "sunny"} 
+              size={16} 
+              color={colors.primary} 
+            />
+            <Text style={[styles.themeText, { color: colors.text }]}>
+              {themeLoading ? "..." : isDark ? "Dark" : "Light"}
+            </Text>
+          </View>
+        </View>
 
-<ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: isDark ? "#121212" : "#FFECF1" }
-      ]}
-    >       
-    
-    
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: isDark ? "#FFD1DC" : "#FF6B8B" }]}>
-          🌸 Your Profile
-        </Text>
-        <Text style={[styles.subtitle, { color: isDark ? "#FFC0CB" : "#FF6B8B" }]}>
-          Make it as beautiful as you are!
-        </Text>
-      </View>
+        {/* Profile Card */}
+        <View style={[styles.profileCard, { backgroundColor: colors.card }]}>
+          {/* Profile Image Section */}
+          <View style={styles.profileImageSection}>
+            <View style={styles.imageContainer}>
+              {uploading ? (
+                <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                  <Text style={[styles.uploadingText, { color: colors.textMuted }]}>
+                    Uploading...
+                  </Text>
+                </View>
+              ) : image ? (
+                <View style={styles.imageWrapper}>
+                  <Image source={{ uri: image }} style={styles.profileImage} />
+                  <TouchableOpacity 
+                    style={[styles.editImageButton, { backgroundColor: colors.primary }]} 
+                    onPress={pickImage}
+                  >
+                    <Ionicons name="camera" size={16} color="#FFF" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={[styles.placeholderContainer, { backgroundColor: colors.background }]}>
+                  <Ionicons name="person" size={48} color={colors.textMuted} />
+                </View>
+              )}
+            </View>
 
-        {/* Profile Image Section */}
-        <View style={styles.profileSection}>
-          <View style={styles.imageContainer}>
-            {uploading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#FF6B8B" />
-                <Text style={styles.uploadingText}>Uploading your beautiful picture...</Text>
-              </View>
-            ) : image ? (
-              <View style={styles.imageWrapper}>
-                <Image source={{ uri: image }} style={styles.profileImage} />
-                <TouchableOpacity style={styles.editImageButton} onPress={pickImage}>
-                  <Ionicons name="camera" size={20} color="#FFF" />
+            {/* User Info */}
+            <View style={styles.userInfo}>
+              {editingName ? (
+                <View style={styles.nameEditContainer}>
+                  <TextInput
+                    style={[styles.nameInput, { color: colors.text, borderColor: colors.border }]}
+                    value={displayName}
+                    onChangeText={setDisplayName}
+                    placeholder="Enter your name"
+                    placeholderTextColor={colors.textMuted}
+                  />
+                  <View style={styles.nameEditActions}>
+                    <TouchableOpacity 
+                      style={[styles.saveNameButton, { backgroundColor: colors.primary }]} 
+                      onPress={saveDisplayName}
+                    >
+                      <Text style={styles.saveNameButtonText}>Save</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.cancelNameButton, { borderColor: colors.border }]} 
+                      onPress={() => setEditingName(false)}
+                    >
+                      <Text style={[styles.cancelNameButtonText, { color: colors.text }]}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <TouchableOpacity onPress={() => setEditingName(true)} style={styles.nameContainer}>
+                  <Text style={[styles.userName, { color: colors.text }]}>
+                    {displayName || user?.email?.split('@')[0] || "User"}
+                  </Text>
+                  <Ionicons name="pencil" size={16} color={colors.textMuted} />
                 </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.placeholderContainer}>
-                <Ionicons name="person-circle-outline" size={120} color="#FFD1DC" />
-                <Text style={styles.placeholderText}>Add your beautiful picture</Text>
-              </View>
-            )}
+              )}
+              <Text style={[styles.userEmail, { color: colors.textMuted }]}>{user?.email}</Text>
+            </View>
           </View>
 
-          {/* User Info */}
-          <View style={styles.userInfo}>
-            {editingName ? (
-              <View style={styles.nameEditContainer}>
-                <TextInput
-                  style={styles.nameInput}
-                  value={displayName}
-                  onChangeText={setDisplayName}
-                  placeholder="Enter your name"
-                  placeholderTextColor="#FFA5BA"
-                />
-                <TouchableOpacity style={styles.saveButton} onPress={saveDisplayName}>
-                  <Text style={styles.saveButtonText}>Save</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity onPress={() => setEditingName(true)}>
-                <Text style={styles.userName}>{displayName || "Beautiful User"}</Text>
-              </TouchableOpacity>
-            )}
-
-            <Text style={styles.userEmail}>{user?.email}</Text>
-            <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>∞</Text>
-                <Text style={styles.statLabel}>Beautiful Notes</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>💖</Text>
-                <Text style={styles.statLabel}>Loved</Text>
-              </View>
+          {/* Stats */}
+          <View style={styles.statsContainer}>
+            <View style={[styles.statItem, { backgroundColor: colors.background }]}>
+              <Text style={[styles.statNumber, { color: colors.primary }]}>∞</Text>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Notes</Text>
+            </View>
+            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+            <View style={[styles.statItem, { backgroundColor: colors.background }]}>
+              <Text style={[styles.statNumber, { color: colors.accent }]}>100%</Text>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Active</Text>
+            </View>
+            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+            <View style={[styles.statItem, { backgroundColor: colors.background }]}>
+              <Text style={[styles.statNumber, { color: colors.secondary }]}>⭐</Text>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Pro</Text>
             </View>
           </View>
         </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>Update Your Picture</Text>
-          
+        {/* Photo Actions */}
+        <View style={[styles.actionsCard, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Update Profile Photo</Text>
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
-              style={[styles.actionButton, styles.galleryButton]} 
+              style={[styles.actionButton, { backgroundColor: colors.primary }]} 
               onPress={pickImage}
               disabled={uploading}
             >
-              <Ionicons name="images" size={24} color="#FFF" />
-              <Text style={styles.buttonText}>Choose from Gallery</Text>
+              <Ionicons name="images" size={20} color="#FFF" />
+              <Text style={styles.actionButtonText}>Choose from Gallery</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.actionButton, styles.cameraButton]} 
+              style={[styles.actionButton, { backgroundColor: colors.secondary }]} 
               onPress={openCamera}
               disabled={uploading}
             >
-              <Ionicons name="camera" size={24} color="#FFF" />
-              <Text style={styles.buttonText}>Take a Photo</Text>
+              <Ionicons name="camera" size={20} color="#FFF" />
+              <Text style={styles.actionButtonText}>Take a Photo</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Email & Password Management */}
-        <View style={styles.settingsSection}>
-          <Text style={styles.sectionTitle}>Account Settings</Text>
-          <Text style={styles.infoText}>Email: {user?.email}</Text>
-
-          <TouchableOpacity style={styles.settingButton} onPress={handleChangePassword}>
-            <Ionicons name="key-outline" size={20} color="#FF6B8B" />
-            <Text style={styles.settingText}>Change Password</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingButton} onPress={handleResetPassword}>
-            <Ionicons name="mail-outline" size={20} color="#FF6B8B" />
-            <Text style={styles.settingText}>Send Password Reset Email</Text>
-          </TouchableOpacity>
+        {/* Account Settings */}
+        <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Account Security</Text>
           
-          <View style={{ height: 12 }} />
-
-          {/* THEME */}
-          <Text style={[styles.sectionTitle, { marginTop: 0 }]}>Appearance</Text>
-          <View style={styles.themeToggle}>
-            <Text style={styles.settingText}>
-              Current: {themeLoading ? "..." : theme === "dark" ? "Dark" : "Light"}
-            </Text>
-
-            <TouchableOpacity
-              onPress={async () => {
-                try {
-                  await toggleTheme();
-                } catch (e) {
-                  console.error("Toggle theme error", e);
-                }
-              }}
-              style={styles.themeButton}
-            >
-              <Text style={styles.themeButtonText}>
-                Toggle Theme
+          <TouchableOpacity style={styles.settingItem} onPress={handleChangePassword}>
+            <View style={[styles.settingIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+              <Ionicons name="key" size={20} color={colors.accent} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={[styles.settingTitle, { color: colors.text }]}>Change Password</Text>
+              <Text style={[styles.settingDescription, { color: colors.textMuted }]}>
+                Update your current password
               </Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingItem} onPress={handleResetPassword}>
+            <View style={[styles.settingIcon, { backgroundColor: 'rgba(99, 102, 241, 0.1)' }]}>
+              <Ionicons name="mail" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={[styles.settingTitle, { color: colors.text }]}>Reset Password</Text>
+              <Text style={[styles.settingDescription, { color: colors.textMuted }]}>
+                Send password reset email
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Appearance Settings */}
+        <View style={[styles.settingsCard, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Appearance</Text>
+          
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={toggleTheme}
+            disabled={themeLoading}
+          >
+            <View style={[styles.settingIcon, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
+              <Ionicons name={isDark ? "moon" : "sunny"} size={20} color={colors.secondary} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={[styles.settingTitle, { color: colors.text }]}>Theme</Text>
+              <Text style={[styles.settingDescription, { color: colors.textMuted }]}>
+                {themeLoading ? "Loading..." : `Current: ${isDark ? "Dark" : "Light"}`}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </TouchableOpacity>
         </View>
 
         {/* App Info */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoCard}>
-            <Feather name="heart" size={24} color="#FF6B8B" />
-            <Text style={styles.infoTitle}>Beautiful Notes App</Text>
-            <Text style={styles.infoText}>
-              Capture your thoughts, dreams, and beautiful moments with style and elegance.
-            </Text>
-          </View>
+        <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
+          <Feather name="info" size={24} color={colors.primary} />
+          <Text style={[styles.infoTitle, { color: colors.text }]}>Notezy App</Text>
+          <Text style={[styles.infoText, { color: colors.textMuted }]}>
+            Capture your thoughts, organize your ideas, and stay productive with our elegant note-taking solution.
+          </Text>
         </View>
 
         {/* Logout Button */}
         <TouchableOpacity 
-          style={styles.logoutButton} 
+          style={[styles.logoutButton, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]} 
           onPress={handleLogout}
         >
-          <Ionicons name="log-out-outline" size={20} color="#FF6B8B" />
-          <Text style={styles.logoutText}>Logout</Text>
+          <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+          <Text style={[styles.logoutText, { color: "#EF4444" }]}>Logout</Text>
         </TouchableOpacity>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Made with 💖 for beautiful minds</Text>
+          <Text style={[styles.footerText, { color: colors.textMuted }]}>
+            Made with ❤️ for productive minds
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -349,143 +395,194 @@ export default function ProfilePage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFECF1",
   },
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#FFECF1",
   },
   header: {
-    alignItems: 'center',
-    marginBottom: 30,
-    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 24,
+  },
+  headerContent: {
+    flex: 1,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#FF6B8B",
-    textAlign: 'center',
-    marginBottom: 8,
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: "#FF6B8B",
-    textAlign: 'center',
-    opacity: 0.8,
+    fontWeight: '500',
   },
-  profileSection: {
+  themeIndicator: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    padding: 20,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#FFD1DC',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 6,
   },
-  imageContainer: {
+  themeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  profileCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  profileImageSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 20,
   },
+  imageContainer: {
+    marginRight: 16,
+  },
   loadingContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 150,
   },
   uploadingText: {
-    marginTop: 10,
-    color: "#FF6B8B",
-    fontSize: 14,
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: '500',
   },
   imageWrapper: {
     position: 'relative',
   },
   profileImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    borderWidth: 4,
-    borderColor: '#FFD1DC',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: '#E2E8F0',
   },
   editImageButton: {
     position: 'absolute',
-    bottom: 10,
-    right: 10,
-    backgroundColor: '#FF6B8B',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    borderColor: '#FFFFFF',
   },
   placeholderContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 150,
-    height: 150,
-  },
-  placeholderText: {
-    marginTop: 10,
-    color: "#FF6B8B",
-    fontSize: 14,
-    textAlign: 'center',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#E2E8F0',
   },
   userInfo: {
+    flex: 1,
+  },
+  nameContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#FF6B8B",
-    marginBottom: 4,
-    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: '700',
   },
   userEmail: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  nameEditContainer: {
+    marginBottom: 8,
+  },
+  nameInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
-    color: "#FF6B8B",
-    opacity: 0.7,
-    marginBottom: 20,
-    textAlign: 'center',
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  nameEditActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  saveNameButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  saveNameButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  cancelNameButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  cancelNameButtonText: {
+    fontWeight: '600',
+    fontSize: 14,
   },
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 30,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 8,
   },
   statItem: {
+    flex: 1,
     alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
   },
   statNumber: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#FF6B8B",
+    fontSize: 18,
+    fontWeight: '700',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: "#FF6B8B",
-    opacity: 0.8,
+    fontWeight: '600',
   },
-  actionsSection: {
-    marginBottom: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  statDivider: {
+    width: 1,
+    marginVertical: 8,
+  },
+  actionsCard: {
+    borderRadius: 16,
     padding: 20,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#FFD1DC',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#FF6B8B",
+    fontSize: 18,
+    fontWeight: '700',
     marginBottom: 16,
-    textAlign: 'center',
   },
   buttonContainer: {
     gap: 12,
@@ -495,83 +592,67 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    borderRadius: 25,
-    shadowColor: '#FF6B8B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-    gap: 10,
+    borderRadius: 12,
+    gap: 8,
   },
-  galleryButton: {
-    backgroundColor: "#FF6B8B",
-  },
-  cameraButton: {
-    backgroundColor: "#FF9EBD",
-  },
-  buttonText: {
-    color: "#FFF",
-    fontWeight: "600",
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
     fontSize: 16,
   },
-  settingsSection: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  settingsCard: {
+    borderRadius: 16,
     padding: 20,
-    borderRadius: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#FFD1DC',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  settingButton: {
-    flexDirection: "row",
-    alignItems: "center",
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 12,
     gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#FFD1DC',
   },
-  settingText: {
-    fontSize: 16,
-    color: "#FF6B8B",
-    fontWeight: '500',
-  },
-  themeToggle: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 10,
-    paddingVertical: 10,
-  },
-  themeButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: "#FF6B8B",
-    borderRadius: 10,
-  },
-  themeButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  infoSection: {
-    marginBottom: 30,
-  },
-  infoCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    padding: 20,
+  settingIcon: {
+    width: 40,
+    height: 40,
     borderRadius: 20,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#FFD1DC',
+    justifyContent: 'center',
+  },
+  settingContent: {
+    flex: 1,
+  },
+  settingTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  settingDescription: {
+    fontSize: 14,
+    fontWeight: '400',
+  },
+  infoCard: {
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   infoTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#FF6B8B",
+    fontWeight: '700',
     marginVertical: 8,
   },
   infoText: {
     fontSize: 14,
-    color: "#FF6B8B",
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -580,21 +661,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderWidth: 1,
-    borderColor: '#FFD1DC',
-    marginBottom: 20,
+    borderRadius: 12,
     gap: 8,
-    shadowColor: '#FF6B8B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 20,
   },
   logoutText: {
-    color: "#FF6B8B",
-    fontWeight: "600",
+    fontWeight: '600',
     fontSize: 16,
   },
   footer: {
@@ -603,39 +675,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: "#FF6B8B",
-    opacity: 0.6,
-  },
-  nameEditContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 10,
-  },
-  nameInput: {
-    borderBottomWidth: 1,
-    borderColor: "#FF6B8B",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    fontSize: 18,
-    color: "#FF6B8B",
-    minWidth: 180,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    borderRadius: 8,
-  },
-  saveButton: {
-    backgroundColor: "#FF6B8B",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    shadowColor: '#FF6B8B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  saveButtonText: {
-    color: "#FFF",
-    fontWeight: "600",
+    fontWeight: '500',
   },
 });
