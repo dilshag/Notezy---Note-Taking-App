@@ -1,13 +1,13 @@
 import {
-    addDoc,
-    collection,
-    deleteDoc,
-    doc,
-    getDocs,
-    query,
-    Timestamp,
-    updateDoc,
-    where,
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  Timestamp,
+  updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "../firebase"; // Firebase config path
 import { Note } from "../types/note";
@@ -27,7 +27,16 @@ export const getNotes = async (userId: string): Promise<Note[]> => {
 // // Add new note
 
 export const addNote = async (
-userId: string, title: string, content: string, category: string, imageUrl: string | null = null, videoUrl: string | null = null, fileUrl: string | null = null, reminderDate: Date | null): Promise<string> => {
+userId: string, 
+title: string, 
+content: string, 
+category: string, 
+imageUrl: string | null = null, 
+videoUrl: string | null = null, 
+fileUrl: string | null = null, 
+reminderDate: Date | null
+): Promise<string> => {
+
   const docRef = await addDoc(notesCollection, {
     userId,
     title,
@@ -36,6 +45,8 @@ userId: string, title: string, content: string, category: string, imageUrl: stri
     imageUrl: imageUrl ?? null,
     videoUrl: videoUrl ?? null,
     fileUrl: fileUrl ?? null,
+    reminderDate: reminderDate ? Timestamp.fromDate(reminderDate) : null,
+
     createdAt: Timestamp.now(),
   });
   return docRef.id;
@@ -44,13 +55,18 @@ userId: string, title: string, content: string, category: string, imageUrl: stri
 
 // Update note
 export const updateNote = async (
-  noteId: string,
-  title: string,
-  content: string,
-  category: string
+  noteId: string, 
+  title: string, 
+  content: string, 
+  category: string, 
+  editReminder: Date | null
 ): Promise<void> => {
   const noteRef = doc(db, "notes", noteId);
-  await updateDoc(noteRef, { title, content, category });
+  await updateDoc(noteRef, { 
+    title, 
+    content, 
+    category,
+    reminderDate: editReminder ? Timestamp.fromDate(editReminder) : null,});
 };
 
 // Delete note

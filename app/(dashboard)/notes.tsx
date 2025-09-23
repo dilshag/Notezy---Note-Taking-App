@@ -1,11 +1,13 @@
 // app/(dashboard)/notes.tsx
 import { Ionicons } from "@expo/vector-icons";
+import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { ResizeMode, Video } from "expo-av";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Button, FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { deleteNote, getNotes, updateNote } from "../../services/noteService";
+import { scheduleNotification } from "../../services/notificationService";
 import { Note } from "../../types/note";
 
 export default function NotesPage() {
@@ -16,6 +18,7 @@ export default function NotesPage() {
   const [editContent, setEditContent] = useState("");
   const [search, setSearch] = useState("");
   const router = useRouter();
+  const [editReminder, setEditReminder] = useState<Date | null>(null);
 
   const categories = ["Personal", "Work", "Study", "Ideas", "Other"];
   const categoryColors: { [key: string]: string } = {
@@ -38,6 +41,8 @@ export default function NotesPage() {
         imageUrl: note.imageUrl ?? undefined,
         videoUrl: note.videoUrl ?? undefined,
         fileUrl: note.fileUrl ?? undefined,
+        reminder: note.reminderDate ? new Date(note.reminderDate) : null,
+
       }));
       setNotes(notesData);
     }
@@ -47,10 +52,44 @@ export default function NotesPage() {
     loadNotes();
   }, [user]);
 
+
+// 🔧 Pick/Edit Reminder
+  const pickReminder = (currentReminder: Date | null, callback: (newDate: Date) => void) => {
+    const initDate = currentReminder || new Date();
+    DateTimePickerAndroid.open({
+      value: initDate,
+      mode: "date",
+      is24Hour: true,
+      onChange: (event, selectedDate) => {
+        if (selectedDate) {
+          const pickedDate = selectedDate;
+          DateTimePickerAndroid.open({
+            value: pickedDate,
+            mode: "time",
+            is24Hour: true,
+            onChange: (event, selectedTime) => {
+              if (selectedTime) {
+                const finalDate = new Date(
+                  pickedDate.getFullYear(),
+                  pickedDate.getMonth(),
+                  pickedDate.getDate(),
+                  selectedTime.getHours(),
+                  selectedTime.getMinutes()
+                );
+                callback(finalDate);
+              }
+            },
+          });
+        }
+      },
+    });
+  };
+
   const handleEdit = (note: Note) => {
     setEditingId(note.id);
     setEditTitle(note.title);
     setEditContent(note.content);
+    setEditReminder(note.reminderDate || null);
   };
 
   const handleSaveEdit = async (id: string) => {
@@ -59,11 +98,18 @@ export default function NotesPage() {
       id,
       editTitle,
       editContent,
-      notes.find((n) => n.id === id)?.category || "Other"
+      notes.find((n) => n.id === id)?.category || "Other",  editReminder
     );
+
+// Schedule notification if reminder exists
+    if (editReminder) {
+      await scheduleNotification(`Reminder: ${editTitle}`, editContent, editReminder);
+    }
+
     setEditingId(null);
     setEditTitle("");
     setEditContent("");
+    setEditReminder(null);
     loadNotes();
   };
 
@@ -81,18 +127,11 @@ export default function NotesPage() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with Reminder Test button */}
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <Text style={styles.title}>📝 Notes</Text>
-        <Button
-          title="Test Reminder"
-          onPress={() => router.push("/(dashboard)/reminderTest")}
-
-          color="#FF6B8B"
-        />
+        <Button title="Add Note" onPress={() => router.push("./index")} color="#FF6B8B" />
       </View>
 
-      {/* Search */}
       <TextInput
         placeholder="Search notes..."
         placeholderTextColor="#FFA5BA"
@@ -101,7 +140,6 @@ export default function NotesPage() {
         onChangeText={setSearch}
       />
 
-      {/* Notes List */}
       <FlatList
         data={filteredNotes}
         keyExtractor={(item) => item.id}
@@ -109,18 +147,14 @@ export default function NotesPage() {
           <View style={[styles.noteCard, { backgroundColor: categoryColors[item.category] || "#FFF" }]}>
             {editingId === item.id ? (
               <>
-                <TextInput
-                  style={styles.input}
-                  value={editTitle}
-                  onChangeText={setEditTitle}
-                />
-                <TextInput
-                  style={[styles.input, { height: 60 }]}
-                  value={editContent}
-                  onChangeText={setEditContent}
-                  multiline
-                />
-                <View style={{ flexDirection: "row", gap: 16 }}>
+                <TextInput style={styles.input} value={editTitle} onChangeText={setEditTitle} />
+                <TextInput style={[styles.input, { height: 60 }]} value={editContent} onChangeText={setEditContent} multiline />
+                <TouchableOpacity onPress={() => pickReminder(editReminder, setEditReminder)}>
+                  <Text style={{ color: "#FF6B8B" }}>
+                    {editReminder ? `⏰ Reminder: ${editReminder.toLocaleString()}` : "Add Reminder"}
+                  </Text>
+                </TouchableOpacity>
+                <View style={{ flexDirection: "row", gap: 16, marginTop: 8 }}>
                   <TouchableOpacity onPress={() => handleSaveEdit(item.id)}>
                     <Text style={{ color: "#FF6B8B", fontWeight: "700" }}>Save</Text>
                   </TouchableOpacity>
@@ -135,26 +169,13 @@ export default function NotesPage() {
                   <Text style={styles.noteTitle}>{item.title}</Text>
                   <Text style={styles.noteCategory}>{item.category}</Text>
                 </View>
-
                 <Text style={styles.noteContent}>{item.content}</Text>
 
-                {item.imageUrl && (
-                  <Image
-                    source={{ uri: item.imageUrl }}
-                    style={{ width: "100%", height: 200, borderRadius: 12, marginTop: 8 }}
-                  />
-                )}
-                {item.videoUrl && (
-                  <Video
-                    source={{ uri: item.videoUrl }}
-                    style={{ width: "100%", height: 200, marginTop: 8 }}
-                    useNativeControls
-                    resizeMode={ResizeMode.CONTAIN}
-                  />
-                )}
-                {item.fileUrl && (
-                  <Text style={{ marginTop: 8 }}>File: {item.fileUrl.split("/").pop()}</Text>
-                )}
+                {item.reminderDate && <Text style={{ marginTop: 4, color: "#FF6B8B" }}>⏰ Reminder: {item.reminderDate.toLocaleString()}</Text>}
+
+                {item.imageUrl && <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: 200, borderRadius: 12, marginTop: 8 }} />}
+                {item.videoUrl && <Video source={{ uri: item.videoUrl }} style={{ width: "100%", height: 200, marginTop: 8 }} useNativeControls resizeMode={ResizeMode.CONTAIN} />}
+                {item.fileUrl && <Text style={{ marginTop: 8 }}>📄 File: {item.fileUrl.split("/").pop()}</Text>}
 
                 <View style={styles.noteActions}>
                   <TouchableOpacity onPress={() => handleEdit(item)} style={styles.actionButton}>

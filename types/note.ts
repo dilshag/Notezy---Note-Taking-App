@@ -26,7 +26,7 @@ export interface Note {
   videoUrl?: string | null;
   fileUrl?: string | null;
   
-    reminderDate?: Date; // optional
+  reminderDate?: Date; // optional
   reminderId?: string; // optional, store notification id if needed
 
   createdAt?: { seconds: number; nanoseconds?: number } | Date;
