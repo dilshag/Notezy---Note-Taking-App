@@ -1,8 +1,8 @@
 // context/AuthContext.tsx
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { User } from "firebase/auth";
-import { subscribeToAuthChanges, logout } from "../services/authService";
 import { useRouter } from "expo-router";
+import { User } from "firebase/auth";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { logout, subscribeToAuthChanges } from "../services/authService";
 
 interface AuthContextType {
   user: User | null;
