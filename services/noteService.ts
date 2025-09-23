@@ -1,13 +1,13 @@
 import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  query,
-  Timestamp,
-  updateDoc,
-  where,
+    addDoc,
+    collection,
+    deleteDoc,
+    doc,
+    getDocs,
+    query,
+    Timestamp,
+    updateDoc,
+    where,
 } from "firebase/firestore";
 import { db } from "../firebase"; // Firebase config path
 import { Note } from "../types/note";
@@ -27,14 +27,7 @@ export const getNotes = async (userId: string): Promise<Note[]> => {
 // // Add new note
 
 export const addNote = async (
-  userId: string,
-  title: string,
-  content: string,
-  category: string,
-  imageUrl: string | null = null,
-  videoUrl: string | null = null,
-  fileUrl: string | null = null
-): Promise<string> => {
+userId: string, title: string, content: string, category: string, imageUrl: string | null = null, videoUrl: string | null = null, fileUrl: string | null = null, reminderDate: Date | null): Promise<string> => {
   const docRef = await addDoc(notesCollection, {
     userId,
     title,

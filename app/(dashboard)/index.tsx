@@ -1,11 +1,15 @@
 
 // app/(dashboard)/notes.tsximport { Feather, Ionicons } from "@expo/vector-icons";
+import { scheduleNotification } from "@/services/notificationService";
 import { Feather, Ionicons } from "@expo/vector-icons";
+import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { ResizeMode, Video } from "expo-av";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -20,7 +24,7 @@ import { addNote } from "../../services/noteService";
 
 export default function Home() {
   const { user, logoutUser } = useAuth();
-
+ const router = useRouter();
   // 🔑 State
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -29,7 +33,12 @@ export default function Home() {
   const [video, setVideo] = useState<string | null>(null);
   const [file, setFile] = useState<string | null>(null);
 
+  // Reminder state
+  const [reminderDate, setReminderDate] = useState<Date | null>(null);
+
   const categories = ["Personal", "Work", "Study", "Ideas", "Other"];
+
+
 
   // 📷 Pick Image
   const pickImage = async () => {
@@ -67,6 +76,41 @@ export default function Home() {
     }
   };
 
+
+
+// ⏰ Pick Reminder (Date + Time)
+  const pickReminder = () => {
+    DateTimePickerAndroid.open({
+      value: reminderDate || new Date(),
+      mode: "date",
+      is24Hour: true,
+      onChange: (event, selectedDate) => {
+        if (selectedDate) {
+          const pickedDate = selectedDate;
+          DateTimePickerAndroid.open({
+            value: pickedDate,
+            mode: "time",
+            is24Hour: true,
+            onChange: (event, selectedTime) => {
+              if (selectedTime) {
+                const finalDate = new Date(
+                  pickedDate.getFullYear(),
+                  pickedDate.getMonth(),
+                  pickedDate.getDate(),
+                  selectedTime.getHours(),
+                  selectedTime.getMinutes()
+                );
+                setReminderDate(finalDate);
+              }
+            },
+          });
+        }
+      },
+    });
+  };
+
+
+
   // 💾 Save Note (Uploads first)
   const handleSave = async () => {
     if (!title || !content || !user?.uid) return;
@@ -101,9 +145,18 @@ export default function Home() {
         category,
         imageUrl,
         videoUrl,
-        fileUrl
+        fileUrl,
+        reminderDate // Save reminder
       );
       console.log("Note saved with ID:", noteId);
+
+// Schedule Notification
+      if (reminderDate) {
+        await scheduleNotification(`Reminder: ${title}`, content, reminderDate);
+        Alert.alert("✅ Reminder set!", `Notification at: ${reminderDate.toLocaleString()}`);
+      }
+
+
 
       // ✅ Reset all fields after save
       setTitle("");
@@ -112,8 +165,11 @@ export default function Home() {
       setImage(null);
       setVideo(null);
       setFile(null);
+      setReminderDate(null);
+      Alert.alert("Note saved successfully!");
     } catch (err) {
       console.error("Upload or save failed:", err);
+       Alert.alert("Error saving note.");
     }
   };
 
@@ -122,10 +178,8 @@ export default function Home() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Hello, Beautiful! 🌸</Text>
-          <Text style={styles.subtitle}>
-            Your thoughts are precious {user?.email?.split("@")[0]}
-          </Text>
+          <Text style={styles.greeting}>Hello, {user?.email?.split("@")[0]} 🌸</Text>
+          <Text style={styles.subtitle}>Your thoughts are precious!</Text>
         </View>
         <TouchableOpacity onPress={logoutUser} style={styles.avatar}>
           <Ionicons name="flower-outline" size={24} color="#FF6B8B" />
@@ -137,18 +191,10 @@ export default function Home() {
         {categories.map((cat) => (
           <TouchableOpacity
             key={cat}
-            style={[
-              styles.categoryButton,
-              category === cat && styles.categoryButtonSelected,
-            ]}
+            style={[styles.categoryButton, category === cat && styles.categoryButtonSelected]}
             onPress={() => setCategory(cat)}
           >
-            <Text
-              style={[
-                styles.categoryText,
-                category === cat && styles.categoryTextSelected,
-              ]}
-            >
+            <Text style={[styles.categoryText, category === cat && styles.categoryTextSelected]}>
               {cat}
             </Text>
           </TouchableOpacity>
@@ -157,12 +203,7 @@ export default function Home() {
 
       {/* Inputs */}
       <View style={styles.inputWrapper}>
-        <Ionicons
-          name="pencil"
-          size={20}
-          color="#FF6B8B"
-          style={styles.inputIcon}
-        />
+        <Ionicons name="pencil" size={20} color="#FF6B8B" style={styles.inputIcon} />
         <TextInput
           placeholder="Note Title"
           placeholderTextColor="#FFA5BA"
@@ -172,12 +213,7 @@ export default function Home() {
         />
       </View>
       <View style={styles.inputWrapper}>
-        <Ionicons
-          name="create"
-          size={20}
-          color="#FF6B8B"
-          style={styles.inputIcon}
-        />
+        <Ionicons name="create" size={20} color="#FF6B8B" style={styles.inputIcon} />
         <TextInput
           placeholder="Express your beautiful thoughts here..."
           placeholderTextColor="#FFA5BA"
@@ -191,49 +227,21 @@ export default function Home() {
 
       {/* Attachments */}
       <View style={{ flexDirection: "row", gap: 10, marginVertical: 10 }}>
-        <TouchableOpacity onPress={pickImage}>
-          <Text style={{ color: "#FF6B8B" }}>Add Image</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={pickVideo}>
-          <Text style={{ color: "#FF6B8B" }}>Add Video</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={pickFile}>
-          <Text style={{ color: "#FF6B8B" }}>Add File</Text>
-        </TouchableOpacity>
+        <TouchableOpacity onPress={pickImage}><Text style={{ color: "#FF6B8B" }}>Add Image</Text></TouchableOpacity>
+        <TouchableOpacity onPress={pickVideo}><Text style={{ color: "#FF6B8B" }}>Add Video</Text></TouchableOpacity>
+        <TouchableOpacity onPress={pickFile}><Text style={{ color: "#FF6B8B" }}>Add File</Text></TouchableOpacity>
+        <TouchableOpacity onPress={pickReminder}><Text style={{ color: "#FF6B8B" }}>Add Reminder</Text></TouchableOpacity>
       </View>
 
       {/* Preview Attachments */}
-      {image && (
-        <Image
-          source={{ uri: image }}
-          style={{
-            width: "100%",
-            height: 200,
-            borderRadius: 12,
-            marginBottom: 8,
-          }}
-        />
-      )}
-      {video && (
-        <Video
-          source={{ uri: video }}
-          style={{ width: "100%", height: 200, marginBottom: 8 }}
-          useNativeControls
-          resizeMode={ResizeMode.CONTAIN}
-        />
-      )}
-      {file && (
-        <Text style={{ color: "#FF6B8B", marginBottom: 8 }}>
-          📄 File Selected: {file.split("/").pop()}
-        </Text>
-      )}
+      {image && <Image source={{ uri: image }} style={{ width: "100%", height: 200, borderRadius: 12, marginBottom: 8 }} />}
+      {video && <Video source={{ uri: video }} style={{ width: "100%", height: 200, marginBottom: 8 }} useNativeControls resizeMode={ResizeMode.CONTAIN} />}
+      {file && <Text style={{ color: "#FF6B8B", marginBottom: 8 }}>📄 File: {file.split("/").pop()}</Text>}
+      {reminderDate && <Text style={{ color: "#FF6B8B", marginBottom: 8 }}>⏰ Reminder: {reminderDate.toLocaleString()}</Text>}
 
       {/* Save Button */}
       <TouchableOpacity
-        style={[
-          styles.saveButton,
-          (!title || !content) && styles.saveButtonDisabled,
-        ]}
+        style={[styles.saveButton, (!title || !content) && styles.saveButtonDisabled]}
         onPress={handleSave}
         disabled={!title || !content}
       >
@@ -244,71 +252,23 @@ export default function Home() {
   );
 }
 
+
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#FFECF1",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
+  safeArea: { flex: 1, padding: 20, backgroundColor: "#FFECF1" },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
   greeting: { fontSize: 26, fontWeight: "700", color: "#FF6B8B" },
   subtitle: { fontSize: 14, color: "#FF6B8B", marginTop: 4 },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,214,224,0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#FF6B8B",
-  },
-  categoryContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 10,
-  },
-  categoryButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.7)",
-    marginRight: 8,
-    marginBottom: 6,
-  },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255,214,224,0.7)", justifyContent: "center", alignItems: "center", borderWidth: 2, borderColor: "#FF6B8B" },
+  categoryContainer: { flexDirection: "row", flexWrap: "wrap", marginBottom: 10 },
+  categoryButton: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.7)", marginRight: 8, marginBottom: 6 },
   categoryButtonSelected: { backgroundColor: "#FF6B8B" },
   categoryText: { color: "#FF6B8B", fontWeight: "600" },
   categoryTextSelected: { color: "#fff" },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.8)",
-    borderRadius: 20,
-    marginBottom: 12,
-    paddingHorizontal: 10,
-  },
+  inputWrapper: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.8)", borderRadius: 20, marginBottom: 12, paddingHorizontal: 10 },
   inputIcon: { marginRight: 8 },
   input: { flex: 1, paddingVertical: 14, fontSize: 16, color: "#FF6B8B" },
   contentInput: { height: 120, textAlignVertical: "top" },
-  saveButton: {
-    backgroundColor: "#FF6B8B",
-    padding: 16,
-    borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    marginTop: 10,
-  },
+  saveButton: { backgroundColor: "#FF6B8B", padding: 16, borderRadius: 25, alignItems: "center", justifyContent: "center", flexDirection: "row", marginTop: 10 },
   saveButtonDisabled: { backgroundColor: "#FFD1DC" },
-  saveButtonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
-    marginRight: 8,
-  },
+  saveButtonText: { color: "#fff", fontWeight: "700", fontSize: 16, marginRight: 8 },
 });
