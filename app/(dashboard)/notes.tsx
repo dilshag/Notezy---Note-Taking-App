@@ -1,4 +1,5 @@
 // app/(dashboard)/notes.tsx
+import { useThemeContext } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { ResizeMode, Video } from "expo-av";
@@ -9,8 +10,9 @@ import { useAuth } from "../../context/AuthContext";
 import { deleteNote, getNotes, updateNote } from "../../services/noteService";
 import { cancelNotification, scheduleNotification } from "../../services/notificationService";
 import { Note } from "../../types/note";
-
 export default function NotesPage() {
+
+     const { theme } = useThemeContext();
   const { user } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -143,9 +145,9 @@ const handleDelete = async (id: string) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme === "dark" ? "#121212" : "#FFECF1" }]}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <Text style={styles.title}>📝 Notes</Text>
+      <Text style={[styles.title, { color: theme === "dark" ? "#fff" : "#FF6B8B" }]}>📝 Notes</Text>
         <Button title="Add Note" onPress={() => router.push("./index")} color="#FF6B8B" />
       </View>
 

@@ -1,5 +1,6 @@
 
 // app/(dashboard)/notes.tsximport { Feather, Ionicons } from "@expo/vector-icons";
+import { useThemeContext } from "@/context/ThemeContext";
 import { scheduleNotification } from "@/services/notificationService";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
@@ -22,7 +23,10 @@ import { useAuth } from "../../context/AuthContext";
 import { uploadToCloudinary } from "../../services/cloudinaryService";
 import { addNote } from "../../services/noteService";
 
+
 export default function Home() {
+
+   const { theme } = useThemeContext();
   const { user, logoutUser } = useAuth();
  const router = useRouter();
   // 🔑 State
@@ -109,8 +113,7 @@ export default function Home() {
     });
   };
 
-
-
+const [resetKey, setResetKey] = useState(0);
   // 💾 Save Note (Uploads first)
   const handleSave = async () => {
     if (!title || !content || !user?.uid) return;
@@ -171,10 +174,18 @@ export default function Home() {
       console.error("Upload or save failed:", err);
        Alert.alert("Error saving note.");
     }
+
+     setResetKey(prev => prev + 1);
   };
 
   return (
-    <ScrollView style={styles.safeArea}>
+    <ScrollView
+    key={resetKey}
+        style={[
+        styles.safeArea,
+        { backgroundColor: theme === "dark" ? "#121212" : "#FFECF1" },
+      ]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -185,6 +196,10 @@ export default function Home() {
           <Ionicons name="flower-outline" size={24} color="#FF6B8B" />
         </TouchableOpacity>
       </View>
+
+    
+
+    
 
       {/* Category Selector */}
       <View style={styles.categoryContainer}>
@@ -206,10 +221,14 @@ export default function Home() {
         <Ionicons name="pencil" size={20} color="#FF6B8B" style={styles.inputIcon} />
         <TextInput
           placeholder="Note Title"
-          placeholderTextColor="#FFA5BA"
+          placeholderTextColor={theme === "dark" ? "#AAA" : "#FFA5BA"}
+          style={[
+          styles.input,
+        { color: theme === "dark" ? "#fff" : "#FF6B8B" },
+      ]}
           value={title}
           onChangeText={setTitle}
-          style={styles.input}
+          // style={styles.input}
         />
       </View>
       <View style={styles.inputWrapper}>
