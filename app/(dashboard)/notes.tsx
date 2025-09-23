@@ -147,7 +147,7 @@ const handleDelete = async (id: string) => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme === "dark" ? "#121212" : "#FFECF1" }]}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-      <Text style={[styles.title, { color: theme === "dark" ? "#fff" : "#FF6B8B" }]}>📝 Notes</Text>
+    <Text style={[styles.title, { color: theme === "dark" ? "#fff" : "#FF6B8B" }]}>📝 Notes</Text>
         <Button title="Add Note" onPress={() => router.push("./index")} color="#FF6B8B" />
       </View>
 
