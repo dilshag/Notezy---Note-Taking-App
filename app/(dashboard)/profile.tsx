@@ -1,132 +1,9 @@
-// import { useAuth } from "@/context/AuthContext";
-// import { db } from "@/firebase";
-// import * as ImagePicker from "expo-image-picker";
-// import { doc, getDoc, updateDoc } from "firebase/firestore";
-// import React, { useEffect, useState } from "react";
-// //import { Alert, Button, Image, StyleSheet, Text, View } from "react-native";
-// // app/(dashboard)/profile.tsx
-// import { ActivityIndicator, Alert, Button, Image, StyleSheet, Text, View } from "react-native";
-// import { uploadToCloudinary } from "../../services/cloudinaryService";
 
-// export default function ProfilePage() {
-//   const { user, logoutUser } = useAuth();
-//   const [image, setImage] = useState<string | null>(null);
-//   const [loading, setLoading] = useState(false);
-
-//   // Load current profile image from Firestore
-//   useEffect(() => {
-//     const fetchProfile = async () => {
-//       if (!user?.uid) return;
-
-//       try {
-//         const userDoc = await getDoc(doc(db, "users", user.uid));
-//         if (userDoc.exists()) {
-//           const data = userDoc.data();
-//           if (data?.profileImage) setImage(data.profileImage);
-//         }
-//       } catch (err) {
-//         console.error("Error fetching profile:", err);
-//       }
-//     };
-
-//     fetchProfile();
-//   }, [user]);
-
-//   // Pick image from gallery
-//   const pickImage = async () => {
-//     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-//     if (status !== "granted") {
-//       Alert.alert("Permission required", "We need access to your gallery!");
-//       return;
-//     }
-
-//     const result = await ImagePicker.launchImageLibraryAsync({
-//       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-//       allowsEditing: true,
-//       aspect: [1, 1],
-//       quality: 1,
-//     });
-
-//     if (!result.canceled) {
-//       await uploadProfileImage(result.assets[0].uri);
-//     }
-//   };
-
-//   // Pick image from camera
-//   const openCamera = async () => {
-//     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-//     if (status !== "granted") {
-//       Alert.alert("Permission required", "We need access to your camera!");
-//       return;
-//     }
-
-//     const result = await ImagePicker.launchCameraAsync({
-//       allowsEditing: true,
-//       aspect: [1, 1],
-//       quality: 1,
-//     });
-
-//     if (!result.canceled) {
-//       await uploadProfileImage(result.assets[0].uri);
-//     }
-//   };
-
-//   // Upload to Cloudinary & save URL to Firestore
-//   const uploadProfileImage = async (uri: string) => {
-//     if (!user?.uid) return;
-//     setLoading(true);
-
-//     try {
-//       // Upload to Cloudinary
-//       const uploadedUrl = await uploadToCloudinary(uri, "image");
-//       setImage(uploadedUrl);
-
-//       // Save URL to Firestore
-//       await updateDoc(doc(db, "users", user.uid), { profileImage: uploadedUrl });
-//       Alert.alert("Success", "Profile image updated!");
-//     } catch (err) {
-//       console.error("Upload error:", err);
-//       Alert.alert("Upload failed", "Could not upload profile image.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.title}>👤 Profile</Text>
-
-//       {loading ? (
-//         <ActivityIndicator size="large" color="#FF6B8B" style={{ marginBottom: 20 }} />
-//       ) : image ? (
-//         <Image source={{ uri: image }} style={styles.profileImage} />
-//       ) : (
-//         <Text style={styles.subtitle}>No profile picture selected</Text>
-//       )}
-
-//       <View style={styles.buttonContainer}>
-//         <Button title="Pick from Gallery" onPress={pickImage} />
-//         <Button title="Open Camera" onPress={openCamera} />
-//       </View>
-
-//       <View style={{ marginTop: 20 }}>
-//         <Button title="Logout" onPress={logoutUser} color="#FF6B8B" />
-//       </View>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
-//   title: { fontSize: 24, fontWeight: "bold", color: "#FF6B8B", marginBottom: 20 },
-//   subtitle: { fontSize: 16, color: "#555", marginBottom: 20 },
-//   profileImage: { width: 150, height: 150, borderRadius: 75, marginBottom: 20 },
-//   buttonContainer: { flexDirection: "row", gap: 10, justifyContent: "space-between", width: "80%" },
-// });
 import { useAuth } from "@/context/AuthContext";
-import { db } from "@/firebase";
+import { auth, db } from "@/firebase";
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from "expo-image-picker";
+import { sendPasswordResetEmail, updatePassword } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -152,7 +29,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [editingName, setEditingName] = useState(false);
 
-
+  
   // Load current profile image from Firestore
   useEffect(() => {
     const fetchProfile = async () => {
@@ -172,6 +49,43 @@ export default function ProfilePage() {
 
     fetchProfile();
   }, [user]);
+
+
+
+
+
+
+//  Password Management
+  const handleChangePassword = async () => {
+    Alert.prompt(
+      "Change Password",
+      "Enter your new password",
+      async (newPassword) => {
+        if (!newPassword) return;
+        try {
+          if (auth.currentUser) {
+            await updatePassword(auth.currentUser, newPassword);
+            Alert.alert("✅ Password Updated", "Your password has been changed.");
+          }
+        } catch (error: any) {
+          Alert.alert("Error", error.message);
+        }
+      }
+    );
+  };
+
+  const handleResetPassword = async () => {
+    try {
+      if (!user?.email) return;
+      await sendPasswordResetEmail(auth, user.email);
+      Alert.alert("📧 Email Sent", "Check your inbox to reset your password.");
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    }
+  };
+
+
+
 
   // Pick image from gallery
   const pickImage = async () => {
@@ -359,6 +273,24 @@ export default function ProfilePage() {
                 <Text style={styles.buttonText}>Take a Photo</Text>
               </TouchableOpacity>
             </View>
+          </View>
+
+
+
+          {/*  Email & Password Management */}
+          <View style={styles.settingsSection}>
+            <Text style={styles.sectionTitle}>Account</Text>
+            <Text style={styles.infoText}>Email: {user?.email}</Text>
+
+            <TouchableOpacity style={styles.settingButton} onPress={handleChangePassword}>
+              <Ionicons name="key-outline" size={20} color="#FF6B8B" />
+              <Text style={styles.settingText}>Change Password</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.settingButton} onPress={handleResetPassword}>
+              <Ionicons name="mail-outline" size={20} color="#FF6B8B" />
+              <Text style={styles.settingText}>Send Password Reset Email</Text>
+            </TouchableOpacity>
           </View>
 
           {/* App Info */}
@@ -620,5 +552,31 @@ saveButtonText: {
   color: "#FFF",
   fontWeight: "600",
 },
+
+settingsSection: {
+    backgroundColor: "rgba(255,255,255,0.7)",
+    padding: 15,
+    borderRadius: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#FFD1DC",
+  },
+  settingButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    gap: 10,
+  },
+  settingText: {
+    fontSize: 16,
+    color: "#FF6B8B",
+  },
+
+themeToggle: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 10,
+  },
 
 });
