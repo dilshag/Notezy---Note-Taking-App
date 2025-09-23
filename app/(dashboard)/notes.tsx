@@ -145,7 +145,7 @@ export default function NotesPage() {
     setEditingId(note.id);
     setEditTitle(note.title);
     setEditContent(note.content);
-    setEditReminder(note.reminder || null);
+    setEditReminder(note.reminderDate || null);
   };
 
   const handleSaveEdit = async (id: string) => {
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginTop: 15,
   },
   headerText: {
     flex: 1,

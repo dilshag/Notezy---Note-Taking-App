@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginTop: 15,
   },
   welcomeTextContainer: {
     flex: 1,
@@ -393,6 +393,7 @@ const styles = StyleSheet.create({
   welcomeSubtitle: {
     fontSize: 16,
     fontWeight: '400',
+    marginBottom: 6,
   },
   avatar: {
     width: 48,
@@ -405,10 +406,10 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffffff',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 24,
+    marginBottom: 26,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
