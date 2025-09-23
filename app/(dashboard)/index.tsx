@@ -237,7 +237,50 @@ export default function Home() {
       {image && <Image source={{ uri: image }} style={{ width: "100%", height: 200, borderRadius: 12, marginBottom: 8 }} />}
       {video && <Video source={{ uri: video }} style={{ width: "100%", height: 200, marginBottom: 8 }} useNativeControls resizeMode={ResizeMode.CONTAIN} />}
       {file && <Text style={{ color: "#FF6B8B", marginBottom: 8 }}>📄 File: {file.split("/").pop()}</Text>}
-      {reminderDate && <Text style={{ color: "#FF6B8B", marginBottom: 8 }}>⏰ Reminder: {reminderDate.toLocaleString()}</Text>}
+      {/* {reminderDate && <Text style={{ color: "#FF6B8B", marginBottom: 8 }}>⏰ Reminder: {reminderDate.toLocaleString()}</Text>} */}
+      {reminderDate && (
+  <View
+    style={{
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: "rgba(255,255,255,0.6)",
+      padding: 8,
+      borderRadius: 10,
+      marginBottom: 8,
+    }}
+  >
+    <Text style={{ color: "#FF6B8B", flex: 1 }}>
+      ⏰ Reminder: {reminderDate.toLocaleString()}
+    </Text>
+
+    {/* Cancel Reminder Button */}
+    <TouchableOpacity
+      onPress={() =>
+        Alert.alert(
+          "Remove Reminder?",
+          "Are you sure you want to remove this reminder?",
+          [
+            { text: "No" },
+            { text: "Yes", onPress: () => setReminderDate(null) },
+          ]
+        )
+      }
+      style={{
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        backgroundColor: "#FF6B8B",
+        borderRadius: 8,
+      }}
+    >
+      <Text style={{ color: "white", fontWeight: "600" }}>Cancel</Text>
+    </TouchableOpacity>
+  </View>
+)}
+
+
+
+
 
       {/* Save Button */}
       <TouchableOpacity

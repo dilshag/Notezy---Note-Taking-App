@@ -32,3 +32,10 @@ export const scheduleNotification = async (title: string, body: string, date: Da
     } as Notifications.DateTriggerInput,
   });
 };
+
+// Cancel all scheduled notifications
+
+export const cancelAllNotifications = async () => {
+  await Notifications.cancelAllScheduledNotificationsAsync();
+};
+

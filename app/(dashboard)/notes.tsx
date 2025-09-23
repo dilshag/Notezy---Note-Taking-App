@@ -7,7 +7,7 @@ import React, { useEffect, useState } from "react";
 import { Button, FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { deleteNote, getNotes, updateNote } from "../../services/noteService";
-import { scheduleNotification } from "../../services/notificationService";
+import { cancelAllNotifications, scheduleNotification } from "../../services/notificationService";
 import { Note } from "../../types/note";
 
 export default function NotesPage() {
@@ -101,10 +101,13 @@ export default function NotesPage() {
       notes.find((n) => n.id === id)?.category || "Other",  editReminder
     );
 
-// Schedule notification if reminder exists
-    if (editReminder) {
-      await scheduleNotification(`Reminder: ${editTitle}`, editContent, editReminder);
-    }
+
+//  Handle Notifications
+  if (editReminder) {
+    await scheduleNotification(`Reminder: ${editTitle}`, editContent, editReminder);
+  } else {
+    await cancelAllNotifications(); //  cancel old notifications if reminder removed
+  }
 
     setEditingId(null);
     setEditTitle("");
@@ -114,9 +117,11 @@ export default function NotesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    await deleteNote(id);
-    loadNotes();
-  };
+  await cancelAllNotifications(); //  cancel notification for this note
+  await deleteNote(id);
+  loadNotes();
+};
+
 
   const filteredNotes = notes.filter(
     (note) =>
@@ -145,25 +150,62 @@ export default function NotesPage() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={[styles.noteCard, { backgroundColor: categoryColors[item.category] || "#FFF" }]}>
-            {editingId === item.id ? (
-              <>
-                <TextInput style={styles.input} value={editTitle} onChangeText={setEditTitle} />
-                <TextInput style={[styles.input, { height: 60 }]} value={editContent} onChangeText={setEditContent} multiline />
-                <TouchableOpacity onPress={() => pickReminder(editReminder, setEditReminder)}>
-                  <Text style={{ color: "#FF6B8B" }}>
-                    {editReminder ? `⏰ Reminder: ${editReminder.toLocaleString()}` : "Add Reminder"}
-                  </Text>
-                </TouchableOpacity>
-                <View style={{ flexDirection: "row", gap: 16, marginTop: 8 }}>
-                  <TouchableOpacity onPress={() => handleSaveEdit(item.id)}>
-                    <Text style={{ color: "#FF6B8B", fontWeight: "700" }}>Save</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setEditingId(null)}>
-                    <Text style={{ color: "#FF6B8B", fontWeight: "700" }}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
+           {editingId === item.id ? (
+  <>
+    <TextInput
+      style={styles.input}
+      value={editTitle}
+      onChangeText={setEditTitle}
+      placeholder="Edit title"
+      placeholderTextColor="#FFA5BA"
+    />
+    <TextInput
+      style={[styles.input, { height: 60 }]}
+      value={editContent}
+      onChangeText={setEditContent}
+      placeholder="Edit content"
+      placeholderTextColor="#FFA5BA"
+      multiline
+    />
+
+    {/* 🔧 Reminder Picker + Cancel */}
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+      <TouchableOpacity onPress={() => pickReminder(editReminder, setEditReminder)}>
+        <Text style={{ color: "#FF6B8B" }}>
+          {editReminder ? `⏰ Reminder: ${editReminder.toLocaleString()}` : "Add Reminder"}
+        </Text>
+      </TouchableOpacity>
+
+      {editReminder && (
+        <TouchableOpacity
+          onPress={() =>
+            setEditReminder(null)
+          }
+          style={{
+            backgroundColor: "#FF6B8B",
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600" }}>Remove</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+
+    {/* Save / Cancel Buttons */}
+    <View style={{ flexDirection: "row", gap: 16, marginTop: 8 }}>
+      <TouchableOpacity onPress={() => handleSaveEdit(item.id)}>
+        <Text style={{ color: "#FF6B8B", fontWeight: "700" }}>Save</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => setEditingId(null)}>
+        <Text style={{ color: "#FF6B8B", fontWeight: "700" }}>Cancel</Text>
+      </TouchableOpacity>
+    </View>
+  </>
+) : (
+  
+
               <>
                 <View style={styles.noteHeader}>
                   <Text style={styles.noteTitle}>{item.title}</Text>
